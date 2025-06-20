@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Form</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://login2explore.com/jpdb/resources/js/0.0.3/jpdb-commons.js"></script>
+
+  <style>
+  body {
+    background-image: url('image.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  h2 {
+    margin-top: 20px;
+    color: #fff;
+    text-shadow: 1px 1px 2px black;
+  }
+
+  .form-control {
+    background-color: rgba(255, 255, 255, 0.9);
+  }
+
+  .btn {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  }
+
+  .container {
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 10px;
+    padding: 30px;
+    margin-top: 40px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  }
+  </style>
+</head>
+<body class="container py-4">
+  <h2 class="text-center">Employee Form using JsonPowerDB</h2>
+
+  <form id="empForm">
+    <div class="row mb-3">
+      <label class="col-sm-3 col-form-label">Employee ID:</label>
+      <div class="col-sm-6">
+        <input type="text" id="empId" class="form-control">
+      </div>
+    </div>
+    <div class="row mb-3">
+      <label class="col-sm-3 col-form-label">Name:</label>
+      <div class="col-sm-6">
+        <input type="text" id="empName" class="form-control">
+      </div>
+    </div>
+    <div class="row mb-3">
+      <label class="col-sm-3 col-form-label">Basic Salary:</label>
+      <div class="col-sm-6">
+        <input type="number" id="basic" class="form-control">
+      </div>
+    </div>
+    <div class="row mb-3">
+      <label class="col-sm-3 col-form-label">HRA:</label>
+      <div class="col-sm-6">
+        <input type="number" id="hra" class="form-control">
+      </div>
+    </div>
+    <div class="row mb-3">
+      <label class="col-sm-3 col-form-label">DA:</label>
+      <div class="col-sm-6">
+        <input type="number" id="da" class="form-control">
+      </div>
+    </div>
+    <div class="row mb-3">
+      <label class="col-sm-3 col-form-label">Deduction:</label>
+      <div class="col-sm-6">
+        <input type="number" id="deduct" class="form-control">
+      </div>
+    </div>
+  </form>
+
+  <div class="text-center mb-3">
+    <button class="btn btn-primary" onclick="newForm()">New</button>
+    <button class="btn btn-success" id="save" onclick="saveData()">Save</button>
+    <button class="btn btn-warning" id="edit" onclick="editData()">Edit</button>
+    <button class="btn btn-info" id="change" onclick="changeData()">Change</button>
+    <button class="btn btn-secondary" onclick="resetForm()">Reset</button>
+  </div>
+
+  <div class="text-center">
+    <button class="btn btn-outline-dark" id="firstBtn" onclick="getFirst()">First</button>
+    <button class="btn btn-outline-dark" id="prevBtn" onclick="getPrev()">Previous</button>
+    <button class="btn btn-outline-dark" id="nextBtn" onclick="getNext()">Next</button>
+    <button class="btn btn-outline-dark" id="lastBtn" onclick="getLast()">Last</button>
+  </div>
+
+  <script>
+    const jpdbBaseURL = "http://api.login2explore.com:5577";
+    const jpdbIRL = "/api/irl";
+    const jpdbIML = "/api/iml";
+    const dbName = "EMPLOYEE-DB";
+    const relName = "EMPLOYEE-DATA";
+    const token = "90934300|-31949202327332711|90957718";
+
+    function createFIRST_REC_NORequest(token, dbName, relName) {
+      return JSON.stringify({ token, dbName, rel: relName, cmd: "FIRST_RECORD" });
+    }
+
+    function createLAST_REC_NORequest(token, dbName, relName) {
+      return JSON.stringify({ token, dbName, rel: relName, cmd: "LAST_RECORD" });
+    }
+
+    let currRecNo = 0;
+    let lastRecNo = 0;
+    let editingKey = null;
+
+    function updateNavButtons() {
+      $("#firstBtn, #prevBtn").prop("disabled", currRecNo <= 1);
+      $("#nextBtn, #lastBtn").prop("disabled", currRecNo >= lastRecNo);
+    }
+
+    function getEmpJson() {
+      return {
+        empId: $("#empId").val(),
+        name: $("#empName").val(),
+        basic: $("#basic").val(),
+        hra: $("#hra").val(),
+        da: $("#da").val(),
+        deduct: $("#deduct").val()
+      };
+    }
+
+    function fillForm(data) {
+      if (!data) return;
+      $("#empId").val(data.empId || "");
+      $("#empName").val(data.name || "");
+      $("#basic").val(data.basic || "");
+      $("#hra").val(data.hra || "");
+      $("#da").val(data.da || "");
+      $("#deduct").val(data.deduct || "");
+      $("#empId").prop("disabled", true);
+      $("#save").prop("disabled", true);
+      $("#edit").prop("disabled", false);
+      $("#change").prop("disabled", true);
+    }
+
+    function fetchByRecNo(recNo) {
+      const req = createGET_BY_RECORDRequest(token, dbName, relName, recNo);
+      $.ajaxSetup({ async: false });
+      const res = executeCommandAtGivenBaseUrl(req, jpdbBaseURL, jpdbIRL);
+      $.ajaxSetup({ async: true });
+
+      try {
+        if (!res || !res.data) return;
+        const result = typeof res.data === "string" ? JSON.parse(res.data) : res.data;
+        if (!result.record) return;
+        currRecNo = recNo;
+        editingKey = result.record.empId;
+        fillForm(result.record);
+        updateNavButtons();
+      } catch (e) {
+        alert("Error fetching record.");
+      }
+    }
+
+    function newForm() {
+      $("#empForm input").val("");
+      $("#empId").prop("disabled", false);
+      $("#save").prop("disabled", false);
+      $("#edit, #change").prop("disabled", true);
+      editingKey = null;
+    }
+
+    function saveData() {
+      const putReq = createPUTRequest(token, JSON.stringify(getEmpJson()), dbName, relName);
+      $.ajaxSetup({ async: false });
+      executeCommandAtGivenBaseUrl(putReq, jpdbBaseURL, jpdbIML);
+      $.ajaxSetup({ async: true });
+      alert("Data Saved");
+      resetForm();
+      getLast();
+    }
+
+    function editData() {
+      editingKey = $("#empId").val();
+      $("#edit").prop("disabled", true);
+      $("#change").prop("disabled", false);
+    }
+
+    function changeData() {
+      if (!editingKey) {
+        alert("No record selected for editing.");
+        return;
+      }
+      const data = getEmpJson();
+      data.empId = editingKey;
+      const jsonStr = JSON.stringify(data);
+      const updateReq = createUPDATERecordRequest(token, jsonStr, dbName, relName, "empId");
+      $.ajaxSetup({ async: false });
+      executeCommandAtGivenBaseUrl(updateReq, jpdbBaseURL, jpdbIML);
+      $.ajaxSetup({ async: true });
+      alert("Record Updated");
+      resetForm();
+      getLast();
+    }
+
+    function resetForm() {
+      $("#empForm input").val("");
+      $("#empId").prop("disabled", false);
+      $("#save, #change, #edit").prop("disabled", true);
+      editingKey = null;
+    }
+
+    function getFirst() {
+      const req = createFIRST_REC_NORequest(token, dbName, relName);
+      $.ajaxSetup({ async: false });
+      const res = executeCommandAtGivenBaseUrl(req, jpdbBaseURL, jpdbIRL);
+      $.ajaxSetup({ async: true });
+      fetchByRecNo(JSON.parse(res.data).rec_no);
+    }
+
+    function getLast() {
+      const req = createLAST_REC_NORequest(token, dbName, relName);
+      $.ajaxSetup({ async: false });
+      const res = executeCommandAtGivenBaseUrl(req, jpdbBaseURL, jpdbIRL);
+      $.ajaxSetup({ async: true });
+      const parsed = JSON.parse(res.data);
+      lastRecNo = parsed.rec_no;
+      fetchByRecNo(lastRecNo);
+    }
+
+    function getNext() {
+      if (currRecNo < lastRecNo) fetchByRecNo(currRecNo + 1);
+    }
+
+    function getPrev() {
+      if (currRecNo > 1) fetchByRecNo(currRecNo - 1);
+    }
+
+    $(document).ready(() => {
+      getLast();
+    });
+  </script>
+</body>
+</html>
