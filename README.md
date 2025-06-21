@@ -31,6 +31,19 @@ This enabled quicker development with clean and modular JavaScript code.
 
 ---
 
+## 📷 Screenshots
+
+### 💻 Web Form UI
+![Screenshot of Form](./screenshots/form.png)
+
+### 🧭 Navigation Buttons
+![Navigation](./screenshots/navigation.png)
+
+> Screenshots show the layout of the employee form and the available control/navigation features.
+
+---
+
+
 ## 📦 Release History
 
 ### v1.1 - June 21, 2025
