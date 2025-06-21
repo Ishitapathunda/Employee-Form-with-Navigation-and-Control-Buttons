@@ -33,13 +33,7 @@ This enabled quicker development with clean and modular JavaScript code.
 
 ## 📷 Screenshots
 
-### 💻 Web Form UI
-![Screenshot of Form](./screenshots/form.png)
-
-### 🧭 Navigation Buttons
-![Navigation](./screenshots/navigation.png)
-
-> Screenshots show the layout of the employee form and the available control/navigation features.
+![Screenshot 2025-06-20 200454](https://github.com/user-attachments/assets/b7d51f88-3765-4137-8511-e00ac139b664)
 
 ---
 
