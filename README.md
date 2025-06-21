@@ -35,6 +35,13 @@ This enabled quicker development with clean and modular JavaScript code.
 
 ![Screenshot 2025-06-20 200454](https://github.com/user-attachments/assets/b7d51f88-3765-4137-8511-e00ac139b664)
 
+
+
+![Screenshot 2025-06-21 072053](https://github.com/user-attachments/assets/c2ab71dc-c649-453e-820a-f1ab9b0a42d3)
+
+
+
+
 ---
 
 
